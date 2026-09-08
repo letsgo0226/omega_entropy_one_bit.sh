@@ -1,0 +1,1 @@
+# omega_entropy_one_bit.sh
