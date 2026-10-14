@@ -1,0 +1,36 @@
+name: ATGC Managed Fixed Point
+
+on:
+  repository_dispatch:
+    types: [atgc-reconcile]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: atgc-managed-${{ github.repository }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - name: Verify 2 KB one-liner and fixed point
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(wc -l < lfp_atgc_tm_2kb.sh)" -eq 1
+          test "$(wc -c < lfp_atgc_tm_2kb.sh)" -lt 2048
+          sh -n lfp_atgc_tm_2kb.sh
+          sh lfp_atgc_tm_2kb.sh > atgc-certificate.json
+          python3 - <<'PY'
+          import json
+          x=json.load(open("atgc-certificate.json"))
+          assert x["FIX"] and x["REV"] and x["UNIQUE_LFP"]
+          assert x["GC"]==.5 and x["H_BINARY"]==1 and x["H_SOLUTION"]==0
+          assert x["CODE"]=="TAAACTAACCTACCCTCCCC"
+          print("ATGC_REPOSITORY_FIXED_POINT=1")
+          PY
