@@ -1,4 +1,4 @@
-name: ATGC Managed Fixed Point
+name: ATGC Managed QTM Recurrence
 
 on:
   repository_dispatch:
@@ -18,7 +18,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v5
-      - name: Verify 2 KB one-liner and fixed point
+      - name: Verify 2 KB QTM recurrence
         shell: bash
         run: |
           set -euo pipefail
@@ -29,8 +29,8 @@ jobs:
           python3 - <<'PY'
           import json
           x=json.load(open("atgc-certificate.json"))
-          assert x["FIX"] and x["REV"] and x["UNIQUE_LFP"]
-          assert x["GC"]==.5 and x["H_BINARY"]==1 and x["H_SOLUTION"]==0
-          assert x["CODE"]=="TAAACTAACCTACCCTCCCC"
-          print("ATGC_REPOSITORY_FIXED_POINT=1")
+          assert x["protocol"]=="HSI-COSMIC-QUANTUM-SELF-CLOSURE/QTM-1.0"
+          assert all(x[k] is True for k in ("transition_verified","norm_preserved","U2_identity","two_step_quantum_recurrence"))
+          assert x["measurement"]=="none"
+          print("QTM_RECURRENCE_VERIFIED=1; scope=specified two-state TM only")
           PY
